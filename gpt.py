@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from minbpe import RegexTokenizer
 
 batch_size = 64
 block_size = 256
@@ -18,14 +19,20 @@ dropout = 0.2
 with open('input.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
+'''Character Tokenization:
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
 stoi = {ch:i for i,ch in enumerate(chars)}
 itos = {i:ch for i,ch in enumerate(chars)}
 encode = lambda s: [stoi[c] for c in s]
 decode = lambda l: ''.join([itos[i] for i in l])
+'''
 
-data = torch.tensor(encode(text), dtype=torch.long)
+tokenizer = RegexTokenizer()
+tokenizer.load("models/regex.model")
+vocab_size = len(tokenizer.vocab)
+
+data = torch.tensor(tokenizer.encode(text), dtype=torch.long)
 n = int(0.9*len(data))
 train_data = data[:n]
 val_data = data[n:]
@@ -109,13 +116,13 @@ class GPT(nn.Module):
         self.blocks = nn.Sequential(*[Block(n_embed, n_head=n_head) for _ in range(n_layer)])
         self.ln_final = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
-        self.apply(self.init_weights)
+        self.apply(self._init_weights)
 
-    def init_weights(self, module):
+    def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):
-            module.weight.data.normal_(mean=0.0, std=0.02)
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
         if isinstance(module, nn.Linear) and module.bias is not None:
-            module.bias.data.zero_()
+            torch.nn.init.zeros_(module.bias)
 
     def forward(self, idx, targets=None):
         B, T = idx.shape
@@ -141,6 +148,6 @@ class GPT(nn.Module):
             probs = F.softmax(logits, dim=-1)
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, idx_next), dim=1)
-            print(decode(idx[0].tolist())[-1], end='', flush=True)
+            print(tokenizer.decode(idx[0].tolist())[-1], end='', flush=True)
         print()
         return idx
