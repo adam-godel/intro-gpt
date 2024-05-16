@@ -2,6 +2,7 @@ import os
 import time
 from minbpe import BasicTokenizer, RegexTokenizer
 
+# wget https://raw.githubusercontent.com/karpathy/minbpe/master/tests/taylorswift.txt
 text = open("taylorswift.txt", "r", encoding="utf-8").read()
 os.makedirs("models", exist_ok=True)
 
