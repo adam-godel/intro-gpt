@@ -5,9 +5,9 @@ from minbpe import RegexTokenizer
 
 batch_size = 64
 block_size = 256
-max_iters = 5000
-eval_interval = 500
-learning_rate = 3e-4
+max_iters = 3000
+eval_interval = 300
+learning_rate = 5e-4
 device = 'cuda' if torch.cuda.is_available() else 'mps'
 eval_iters = 200
 n_embed = 384
@@ -148,6 +148,6 @@ class GPT(nn.Module):
             probs = F.softmax(logits, dim=-1)
             idx_next = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, idx_next), dim=1)
-            print(tokenizer.decode(idx[0].tolist())[-1], end='', flush=True)
+            print(tokenizer.decode([idx[0].tolist()[-1]]), end='', flush=True)
         print()
         return idx
