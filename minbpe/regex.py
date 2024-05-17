@@ -97,4 +97,4 @@ class RegexTokenizer(Tokenizer):
                 ids.append(special[part])
             else:
                 ids.extend(self.encode_ordinary(part))
-            return ids
+        return ids
